@@ -111,7 +111,29 @@ class GenNNSke26ToImage(nn.Module):
         super().__init__()
         self.input_dim = Skeleton.reduced_dim
         self.model = nn.Sequential(
-            # TP-TODO
+            # Entrée: (Batch, 26, 1, 1) -> Sortie: (Batch, 1024, 4, 4)
+            nn.ConvTranspose2d(self.input_dim, 1024, kernel_size=4, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(True),
+            
+            # (Batch, 1024, 4, 4) -> Sortie: (Batch, 512, 8, 8)
+            nn.ConvTranspose2d(1024, 512, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            
+            # (Batch, 512, 8, 8) -> Sortie: (Batch, 256, 16, 16)
+            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            
+            # (Batch, 256, 16, 16) -> Sortie: (Batch, 128, 32, 32)
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            
+            # (Batch, 128, 32, 32) -> Sortie: (Batch, 3, 64, 64)
+            nn.ConvTranspose2d(128, 3, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.Tanh() # Tanh pour que la sortie soit dans la plage [-1, 1] comme la cible (tgt_transform)
         )
         print(self.model)
 
@@ -140,7 +162,20 @@ class GenNNSkeImToImage(nn.Module):
         return img
 
 
+class SkeToVectorTransform:
+    """ Convertit l'objet Skeleton en un tenseur PyTorch (D, 1, 1) pour le réseau. """
+    def __init__(self, ske_reduced=True):
+        self.ske_reduced = ske_reduced
 
+    def __call__(self, ske):
+        # ske.__array__(reduced=True) retourne le tableau NumPy (13, 2)
+        numpy_array = ske.__array__(reduced=self.ske_reduced)
+        
+        ske_t = torch.from_numpy(numpy_array).to(torch.float32).flatten()
+        
+        ske_t = ske_t.reshape(ske_t.shape[0], 1, 1)
+        
+        return ske_t
 
 
 
@@ -152,8 +187,7 @@ class GenVanillaNN():
         image_size = 64
         if optSkeOrImage==1:        # skeleton_dim26 to image
             self.netG = GenNNSke26ToImage()
-            src_transform = transforms.Compose([ transforms.ToTensor(),
-                                                 ])
+            src_transform = transforms.Compose([ SkeToVectorTransform(ske_reduced=True)])
             self.filename = 'data/Dance/DanceGenVanillaFromSke26.pth'
         else:                       # skeleton_image to image
             self.netG = GenNNSkeImToImage()
@@ -183,19 +217,50 @@ class GenVanillaNN():
 
 
     def train(self, n_epochs=20):
-        # TP-TODO
-        pass
+        criterion = nn.MSELoss() 
+        optimizer = torch.optim.Adam(self.netG.parameters(), lr=0.0002, betas=(0.5, 0.999))
+        
+        print("GenVanillaNN: Starting Training Loop...")
+        directory = os.path.dirname(self.filename)
+        os.makedirs(directory, exist_ok=True)
+        print(f"Target save directory checked/created: {directory}")
+
+        self.netG.train()
+
+        for epoch in range(n_epochs):
+            for i, (source_data, target_image) in enumerate(self.dataloader):
+                optimizer.zero_grad()
+
+                generated_image = self.netG(source_data)
+                
+                loss = criterion(generated_image, target_image)
+                loss.backward()
+                optimizer.step()
+
+                # Affichage des métriques d'entraînement
+                if i % 100 == 0:
+                    print(f"[{epoch+1}/{n_epochs}][{i}/{len(self.dataloader)}] Loss: {loss.item():.4f}")
+
+        
+        torch.save(self.netG.state_dict(), self.filename)
+        print(f"Model saved state_dict to {self.filename}")
+
+        print("GenVanillaNN: Training Finished.")
 
 
     def generate(self, ske):
         """ generator of image from skeleton """
-        # TP-TODO
-        pass
-        # ske_t = self.dataset.preprocessSkeleton(ske)
-        # ske_t_batch = ske_t.unsqueeze(0)        # make a batch
-        # normalized_output = self.netG(ske_t_batch)
-        # res = self.dataset.tensor2image(normalized_output[0])       # get image 0 from the batch
-        # return res
+        self.netG.eval()
+    
+        ske_t = self.dataset.preprocessSkeleton(ske)
+        # Prepa du tenseur pour le réseau (ajout de la dimension du batch)
+        ske_t_batch = ske_t.unsqueeze(0)   # make a batch
+        
+        with torch.no_grad(): 
+            normalized_output = self.netG(ske_t_batch)
+        
+        res = self.dataset.tensor2image(normalized_output[0])       # get image 0 from the batch
+        return res
 
 
 
@@ -203,8 +268,8 @@ class GenVanillaNN():
 if __name__ == '__main__':
     force = False
     optSkeOrImage = 2           # use as input a skeleton (1) or an image with a skeleton drawed (2)
-    n_epoch = 2000  # 200
-    train = 1 #False
+    n_epoch = 200  # 200
+    train = True 
     #train = True
 
     if len(sys.argv) > 1:
@@ -212,7 +277,7 @@ if __name__ == '__main__':
         if len(sys.argv) > 2:
             force = sys.argv[2].lower() == "true"
     else:
-        filename = "data/taichi1.mp4"
+        filename = "../data/taichi1.mp4"
     print("GenVanillaNN: Current Working Directory=", os.getcwd())
     print("GenVanillaNN: Filename=", filename)
     print("GenVanillaNN: Filename=", filename)

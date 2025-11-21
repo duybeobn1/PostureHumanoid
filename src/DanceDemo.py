@@ -1,4 +1,5 @@
 import numpy as np
+import GenNearest
 import cv2
 import os
 import pickle
@@ -8,7 +9,7 @@ from VideoSkeleton import VideoSkeleton
 from VideoSkeleton import combineTwoImages
 from VideoReader import VideoReader
 from Skeleton import Skeleton
-from GenNearest import GenNeirest
+from GenNearest import GenNearest
 from GenVanillaNN import *
 from GenGAN import *
 
@@ -18,11 +19,11 @@ class DanceDemo:
         The animation/posture from self.source is applied to character define self.target using self.gen
     """
     def __init__(self, filename_src, typeOfGen=2):
-        self.target = VideoSkeleton( "data/taichi1.mp4" )
+        self.target = VideoSkeleton( "../data/taichi1.mp4" )
         self.source = VideoReader(filename_src)
         if typeOfGen==1:           # Nearest
-            print("Generator: GenNeirest")
-            self.generator = GenNeirest(self.target)
+            print("Generator: GenNearest")
+            self.generator = GenNearest(self.target)
         # elif typeOfGen==2:         # VanillaNN
         #     print("Generator: GenSimpleNN")
         #     self.generator = GenVanillaNN( self.target, loadFromFile=True, optSkeOrImage=1)
@@ -70,6 +71,6 @@ if __name__ == '__main__':
     # GAN = 4
     GEN_TYPE = 1
     #ddemo = DanceDemo("data/taichi2_full.mp4", GEN_TYPE)
-    ddemo = DanceDemo("data/taichi2.mp4", GEN_TYPE)
+    ddemo = DanceDemo("../data/taichi2.mp4", GEN_TYPE)
     #ddemo = DanceDemo("data/karate1.mp4", GEN_TYPE)
     ddemo.draw()

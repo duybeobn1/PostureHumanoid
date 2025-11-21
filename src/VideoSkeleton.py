@@ -213,7 +213,7 @@ if __name__ == '__main__':
             if len(sys.argv) > 3:
                 modFRame = int(sys.argv[3])
     else:
-        filename = "data/taichi1.mp4"
+        filename = "../data/taichi1.mp4"
     print("force="+str(force) + " modFrame="+str(modFRame))
     print("Current Working Directory: ", os.getcwd())
     print("Filename=", filename)
