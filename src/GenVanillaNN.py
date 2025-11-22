@@ -144,22 +144,63 @@ class GenNNSke26ToImage(nn.Module):
 
 
 
-class GenNNSkeImToImage(nn.Module):
-    """ class that Generate a new image from from THE IMAGE OF the new skeleton posture
-       SkeletonImage is an image with the skeleton drawed on it
-       Fonc generator(SkeletonImage)->Image
-    """
+class GenNNSke26ToImage(nn.Module):
+    """ Generator: Vector 26 -> Image """
     def __init__(self):
         super().__init__()
         self.input_dim = Skeleton.reduced_dim
         self.model = nn.Sequential(
-            # TP-TODO
+            nn.ConvTranspose2d(self.input_dim, 1024, kernel_size=4, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(1024, 512, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(128, 3, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.Tanh()
         )
-        print(self.model)
 
     def forward(self, z):
         img = self.model(z)
         return img
+
+
+class GenNNSkeImToImage(nn.Module):
+    """ Generator: Skeleton Image -> Real Image (U-Net like architecture) """
+    def __init__(self):
+        super(GenNNSkeImToImage, self).__init__()
+        
+        # Encoder (Downsampling)
+        self.enc1 = nn.Sequential(nn.Conv2d(3, 64, 4, 2, 1, bias=False), nn.LeakyReLU(0.2, inplace=True))
+        self.enc2 = nn.Sequential(nn.Conv2d(64, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(128), nn.LeakyReLU(0.2, inplace=True))
+        self.enc3 = nn.Sequential(nn.Conv2d(128, 256, 4, 2, 1, bias=False), nn.BatchNorm2d(256), nn.LeakyReLU(0.2, inplace=True))
+        self.enc4 = nn.Sequential(nn.Conv2d(256, 512, 4, 2, 1, bias=False), nn.BatchNorm2d(512), nn.LeakyReLU(0.2, inplace=True))
+        
+        # Decoder (Upsampling)
+        self.dec1 = nn.Sequential(nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False), nn.BatchNorm2d(256), nn.ReLU(True))
+        self.dec2 = nn.Sequential(nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(128), nn.ReLU(True))
+        self.dec3 = nn.Sequential(nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(64), nn.ReLU(True))
+        self.out = nn.Sequential(nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False), nn.Tanh())
+
+    def forward(self, x):
+        # Encoding
+        e1 = self.enc1(x) # 32x32
+        e2 = self.enc2(e1) # 16x16
+        e3 = self.enc3(e2) # 8x8
+        e4 = self.enc4(e3) # 4x4
+        
+        # Decoding
+        d1 = self.dec1(e4) # 8x8
+        d2 = self.dec2(d1) # 16x16
+        d3 = self.dec3(d2) # 32x32
+        output = self.out(d3) # 64x64
+        return output
 
 
 class SkeToVectorTransform:
