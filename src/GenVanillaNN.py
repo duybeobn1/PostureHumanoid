@@ -90,7 +90,37 @@ class VideoSkeletonDataset(Dataset):
         return denormalized_output
 
 
+# Self attention custom layer
+class SelfAttention(nn.Module):
+    """ Self-Attention Layer (SAGAN) """
+    def __init__(self, in_dim):
+        super(SelfAttention, self).__init__()
+        self.chanel_in = in_dim
+        
+        # Query, Key, Value
+        self.query_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.key_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.value_conv = nn.Conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1)
 
+        # Gamma: parameters learnt for balance attention and original feature map
+        self.gamma = nn.Parameter(torch.zeros(1))
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        m_batchsize, C, width, height = x.size()
+        
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width*height).permute(0, 2, 1)
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width*height)
+        
+        energy = torch.bmm(proj_query, proj_key)
+        attention = self.softmax(energy)
+        
+        proj_value = self.value_conv(x).view(m_batchsize, -1, width*height)
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1))
+        out = out.view(m_batchsize, C, width, height)
+        
+        out = self.gamma * out + x
+        return out
 
 def init_weights(m):
     classname = m.__class__.__name__
@@ -99,8 +129,6 @@ def init_weights(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
-
-
 
 
 class GenNNSke26ToImage(nn.Module):
@@ -143,34 +171,6 @@ class GenNNSke26ToImage(nn.Module):
 
 
 
-
-class GenNNSke26ToImage(nn.Module):
-    """ Generator: Vector 26 -> Image """
-    def __init__(self):
-        super().__init__()
-        self.input_dim = Skeleton.reduced_dim
-        self.model = nn.Sequential(
-            nn.ConvTranspose2d(self.input_dim, 1024, kernel_size=4, stride=1, padding=0, bias=False),
-            nn.BatchNorm2d(1024),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(1024, 512, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(512),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(256),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(128, 3, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.Tanh()
-        )
-
-    def forward(self, z):
-        img = self.model(z)
-        return img
-
-
 class GenNNSkeImToImage(nn.Module):
     """ Generator: Skeleton Image -> Real Image (U-Net like architecture) """
     def __init__(self):
@@ -184,6 +184,10 @@ class GenNNSkeImToImage(nn.Module):
         
         # Decoder (Upsampling)
         self.dec1 = nn.Sequential(nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False), nn.BatchNorm2d(256), nn.ReLU(True))
+        
+        # Attention layer
+        self.attn = SelfAttention(256)
+        
         self.dec2 = nn.Sequential(nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(128), nn.ReLU(True))
         self.dec3 = nn.Sequential(nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(64), nn.ReLU(True))
         self.out = nn.Sequential(nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False), nn.Tanh())
@@ -197,6 +201,10 @@ class GenNNSkeImToImage(nn.Module):
         
         # Decoding
         d1 = self.dec1(e4) # 8x8
+        # Attention
+        d1 = self.attn(d1)
+
+        
         d2 = self.dec2(d1) # 16x16
         d3 = self.dec3(d2) # 32x32
         output = self.out(d3) # 64x64
@@ -309,7 +317,7 @@ class GenVanillaNN():
 if __name__ == '__main__':
     force = False
     optSkeOrImage = 2           # use as input a skeleton (1) or an image with a skeleton drawed (2)
-    n_epoch = 200  # 200
+    n_epoch = 200  
     train = True 
     #train = True
 

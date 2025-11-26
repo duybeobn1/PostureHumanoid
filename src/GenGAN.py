@@ -244,9 +244,6 @@ class GenGAN():
 
     
 
-
-
-
 if __name__ == '__main__':
     force = False
     if len(sys.argv) > 1:
@@ -265,11 +262,11 @@ if __name__ == '__main__':
     if TRAIN_MODE:
         print("Starting training GAN")
         # loadFromFile=False for resetting the model and training from scratch
-        gen = GenGAN(targetVideoSke, loadFromFile=False)
+        gen = GenGAN(targetVideoSke, loadFromFile=True)
 
         # Train for 200 epochs to achieve decent results
         # Train for 500-1000 epochs to achieve better results
-        gen.train(n_epochs=200)
+        gen.train(n_epochs=500) 
     else:
         print("Loading pre-trained model...")
         gen = GenGAN(targetVideoSke, loadFromFile=True)
