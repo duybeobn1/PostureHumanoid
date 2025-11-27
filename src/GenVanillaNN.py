@@ -188,9 +188,9 @@ class GenNNSkeImToImage(nn.Module):
         # Attention layer
         self.attn = SelfAttention(256)
         
-        self.dec2 = nn.Sequential(nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(128), nn.ReLU(True))
-        self.dec3 = nn.Sequential(nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(64), nn.ReLU(True))
-        self.out = nn.Sequential(nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False), nn.Tanh())
+        self.dec2 = nn.Sequential(nn.ConvTranspose2d(512, 128, 4, 2, 1, bias=False), nn.BatchNorm2d(128), nn.ReLU(True))
+        self.dec3 = nn.Sequential(nn.ConvTranspose2d(256, 64, 4, 2, 1, bias=False), nn.BatchNorm2d(64), nn.ReLU(True))
+        self.out = nn.Sequential(nn.ConvTranspose2d(128, 3, 4, 2, 1, bias=False), nn.Tanh())
 
     def forward(self, x):
         # Encoding
@@ -199,14 +199,22 @@ class GenNNSkeImToImage(nn.Module):
         e3 = self.enc3(e2) # 8x8
         e4 = self.enc4(e3) # 4x4
         
+        
         # Decoding
         d1 = self.dec1(e4) # 8x8
         # Attention
         d1 = self.attn(d1)
 
-        
-        d2 = self.dec2(d1) # 16x16
-        d3 = self.dec3(d2) # 32x32
+        d1 = torch.cat([d1, e3], dim=1)
+
+        d2 = self.dec2(d1) # 128 channels, 16x16    
+        d2 = torch.cat([d2, e2], dim=1)
+
+        # Dec 3: Concat d2 (128ch, 16x16) and e2 (128ch, 16x16) -> 256 total channels
+        d3 = self.dec3(d2) # 64 channels, 32x32  
+        d3 = torch.cat([d3, e1], dim=1)
+
+        # Output: Concat d3 (64ch, 32x32) and e1 (64ch, 32x32) -> 128 total channels
         output = self.out(d3) # 64x64
         return output
 

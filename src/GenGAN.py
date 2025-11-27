@@ -108,7 +108,7 @@ class GenGAN():
             print("GenGAN: Loading model from", self.filename)
             checkpoint = torch.load(self.filename)
             # Check if the saved file is a dictionary (new method) or model object (old method)
-            if isinstance(checkpoint, dict) and 'netG' in checkpoint:
+            if isinstance(checkpoint, dict) and 'netG' in checkpoint: # Pas "and 'netD'" ici ?
                 self.netG.load_state_dict(checkpoint['netG'])
                 self.netD.load_state_dict(checkpoint['netD'])
             else:
@@ -262,7 +262,7 @@ if __name__ == '__main__':
     if TRAIN_MODE:
         print("Starting training GAN")
         # loadFromFile=False for resetting the model and training from scratch
-        gen = GenGAN(targetVideoSke, loadFromFile=True)
+        gen = GenGAN(targetVideoSke, loadFromFile=False)
 
         # Train for 200 epochs to achieve decent results
         # Train for 500-1000 epochs to achieve better results
