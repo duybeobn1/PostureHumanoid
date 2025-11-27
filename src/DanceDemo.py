@@ -43,7 +43,7 @@ class DanceDemo:
         image_err[:, :] = (0, 0, 255)  # (B, G, R)
         for i in range(self.source.getTotalFrames()):
             image_src = self.source.readFrame()
-            if i%5 == 0:
+            if i%3 == 0:
                 isSke, image_src, ske = self.target.cropAndSke(image_src, ske)
                 if isSke:
                     ske.draw(image_src)
@@ -71,6 +71,6 @@ if __name__ == '__main__':
     # GAN = 4
     GEN_TYPE = 4
     #ddemo = DanceDemo("data/taichi2_full.mp4", GEN_TYPE)
-    ddemo = DanceDemo("../data/taichi2.mp4", GEN_TYPE)
-    #ddemo = DanceDemo("data/karate1.mp4", GEN_TYPE)
+    # ddemo = DanceDemo("../data/taichi2.mp4", GEN_TYPE)
+    ddemo = DanceDemo("../data/karate_full.mp4", GEN_TYPE)
     ddemo.draw()

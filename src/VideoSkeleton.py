@@ -35,6 +35,32 @@ def combineTwoImages(image1, image2):
     return combined_image
 
 
+def crop_with_padding(image, x_start, y_start, width, height):
+    # Calculer les dimensions de l'image
+    img_height, img_width = image.shape[:2]
+
+    # Calculer les indices de fin
+    x_end = x_start + width
+    y_end = y_start + height
+
+    # Calculer les paddings nécessaires
+    pad_top = max(0, -y_start)
+    pad_bottom = max(0, y_end - img_height)
+    pad_left = max(0, -x_start)
+    pad_right = max(0, x_end - img_width)
+
+    # Ajouter des zéros autour de l'image
+    #padded_image = np.pad(image, ((pad_top, pad_bottom), (pad_left, pad_right)), mode='constant', constant_values=0)
+    padded_image = np.pad(image, ((pad_top, pad_bottom), (pad_left, pad_right), (0, 0)), mode='constant', constant_values=0)
+
+    # Ajuster les indices de crop après padding
+    x_start = max(0, x_start)
+    y_start = max(0, y_start)
+
+    # Croper l'image
+    cropped_image = padded_image[y_start:y_start+height, x_start:x_start+width]
+
+    return cropped_image
 
 
 class VideoSkeleton:
@@ -44,7 +70,7 @@ class VideoSkeleton:
        self.ske : nparray<Skeleton> => ske[i] the skeleton
        Proc draw() : display all the frame image+skeleton
     """
-    def __init__(self, filename, forceCompute=False, modFrame=10, newVideoWidth=800, cropRatio=1.0, isCrop=True):
+    def __init__(self, filename, forceCompute=False, modFrame=10, newVideoWidth=256, cropRatio=1.0, isCrop=True):
         """
         filename : str => video filename
         forceCompute : boolean => recompute the skeleton if True
@@ -144,9 +170,13 @@ class VideoSkeleton:
                 xM = int(center_x+self.ske_width_crop/2)
                 ym = int(center_y-self.ske_height_crop/2)
                 yM = int(center_y+self.ske_height_crop/2)
-                image = image[ ym:yM, xm:xM ]           # image crop arround skeleton
+                #image = image[ ym:yM, xm:xM ]           # image crop arround skeleton
+                image = crop_with_padding(image, xm, ym, self.ske_width_crop, self.ske_height_crop)
                 #print("crop: xm="+str(xm) + " xM="+str(xM) + " ym="+str(ym) + " yM="+str(yM))
-                ske.crop(xm/self.new_video_width, ym/self.new_video_height, self.ske_width_crop/self.new_video_width, self.ske_height_crop/self.new_video_height)   # skeleton crop
+                ske.crop(       xm/self.new_video_width, 
+                                ym/self.new_video_height, 
+                                self.ske_width_crop/self.new_video_width, 
+                                self.ske_height_crop/self.new_video_height)   # skeleton crop
             return True, image, ske
         else:
             return False, image, ske        
@@ -201,9 +231,11 @@ class VideoSkeleton:
 
 
 if __name__ == '__main__':
-    #force = True
-    force = False
+    force = True
+    #force = False
     modFRame = 10           # 10=>1440 images, 25=>560 images, 100=>140 images, 500=>280 images
+    modFRame = 100
+    modFRame = 5
     modFRame = 100
 
     if len(sys.argv) > 1:
@@ -213,12 +245,11 @@ if __name__ == '__main__':
             if len(sys.argv) > 3:
                 modFRame = int(sys.argv[3])
     else:
-        filename = "../data/taichi1.mp4"
-    print("force="+str(force) + " modFrame="+str(modFRame))
+        filename = "data/taichi1.mp4"
     print("Current Working Directory: ", os.getcwd())
     print("Filename=", filename)
 
-    s = VideoSkeleton(filename, force, modFRame, 400, 1.0, False)  # 0.75)
+    s = VideoSkeleton(filename, forceCompute=force, modFrame=modFRame, newVideoWidth=500, cropRatio=1.0, isCrop=False)  # 0.75)
     print(s)
     s.draw()
 
