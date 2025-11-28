@@ -71,6 +71,5 @@ if __name__ == '__main__':
     # GAN = 4
     GEN_TYPE = 4
     #ddemo = DanceDemo("data/taichi2_full.mp4", GEN_TYPE)
-    # ddemo = DanceDemo("../data/taichi2.mp4", GEN_TYPE)
     ddemo = DanceDemo("../data/karate_full.mp4", GEN_TYPE)
     ddemo.draw()
