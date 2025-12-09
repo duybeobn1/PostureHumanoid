@@ -7,7 +7,7 @@ From a video of a source person and another of a person, the objective is to gen
 
 [See the course main page with the description of this tutorial/TP](http://alexandre.meyer.pages.univ-lyon1.fr/m2-apprentissage-profond-image/am/tp_dance/)
 
-## How to run the code using the trained network : 
+## A - How to run the code using the trained network : 
 The first step is to clone this repository in order to create a copy you can modify at your will.
 
 ### 1 - Choice of the model to execute : 
@@ -33,3 +33,12 @@ In its *__main__* function (lign 67), select the following parameters :
 - 2 : to execute VANILLA_NN method - *GenVanillaNN.py* (direct neural network)
 - 3 : to execute VANILLA_NN_Image method - *GenVanillaNN.py* (Neural network with the skeleton as input)
 - 4 : to execute the GAN method - *GenGAN.py*
+
+**Video selection** : 
+In order to choose the video from which we're going to copy the movements, edit the following line : 
+*ddemo = DanceDemo("../data/karate_full.mp4", GEN_TYPE)*
+
+## B - How to train and save a network : 
+
+**For GenGAN.py** : 
+Lign 260 : switch the variable *TRAIN_MODE*  to *True*
