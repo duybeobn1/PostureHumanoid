@@ -52,4 +52,21 @@ Similarly :
 - Line 328 : choose your number of epochs : `n_epoch = 200`
 
 ## C - What we implemented 
-Our efforts were focussed on the *GenGAN.py* file. We chose
+Our efforts were focussed on the *GenGAN.py* file. We built the following architecture : 
+
+**Discriminator** : 
+Simple discriminator, which consists in a Convolutional Neural Network (CNN). With 2D convolutions progressively computing up to 512 features, it generates a Critic Score prediction.
+- High score (positive) = The image is considered realistic (close to the real data distribution)
+- Low score (negative) = The image is considered unrealistic (close to the fake/generated data distribution).
+It takes in entry an image (of size $3 \times 64 \times 64$), and as output a single scalar value (the Critic Score).
+
+**Generator** : 
+The model is parameterized in the file *GenVanillaNN*, within the function class `GenNNSkeImToImage(nn.Module)`.
+Its features include : 
+- 4-layer Encoder, which performs downsampling from 3 to 512 features.
+- 3-layer Decoder
+- skip connections : 2 skip connections
+  - from layer 3 of encoder => joined with output of layer 1 of encoder by concatenation
+  - from layer 1 of encoder => joined with output of layer 3 of encoder by concatenation
+- self-attention layer of 1st decoding layer.
+
