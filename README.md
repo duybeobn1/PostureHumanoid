@@ -12,11 +12,11 @@ The first step is to clone this repository in order to create a copy you can mod
 
 ### 1 - Choice of the model to execute : 
 **Our GAN models** : 
-You can select the model you want to execute from the *"GenGAN.py"* file => *"__init__"* function (lign 78).
+You can select the model you want to execute from the *"GenGAN.py"* file => `__init__` function (Line 78).
 From there, simply edit the name of the file containing the model you want to execute. These files are available in *src/data/Dance*
 
 **Our Vanilla models** : 
-Similarily, you can select the models you want to execute from *"GenVanillaNN.py"* file => lign 248 or 255.
+Similarily, you can select the models you want to execute from *"GenVanillaNN.py"* file => Line 248 or 255.
 The available models are also stored in *src/data/Dance*.
 
 Our pretrained models are : 
@@ -26,7 +26,7 @@ Our pretrained models are :
 
 ## 2 - Code execution : 
 The file to execute is **DanceDemo.py**. 
-In its *__main__* function (lign 67), select the following parameters :
+In its `__main__` function (Line 67), select the following parameters :
 
 **GEN_TYPE parameter** : 
 - 1 : to execute NEAREST - *GenNearest.py* algorithm
@@ -41,4 +41,12 @@ In order to choose the video from which we're going to copy the movements, edit 
 ## B - How to train and save a network : 
 
 **For GenGAN.py** : 
-Lign 260 : switch the variable *TRAIN_MODE*  to *True*
+- Line 260 : switch the variable *TRAIN_MODE*  to *True*
+- Line 265 : you can switch the value of *loadFromFile* in order to further the training of an already pre-trained model : `gen = GenGAN(targetVideoSke, loadFromFile=False)`. Otherwise, you will create and train a new model from scratch
+- Line 269 : choose the number of epochs of your training : `gen.train(n_epochs=2000)`
+
+**For GenVanillaNN.py** : 
+Similarly : 
+- Line 329 : switch the value of *train* to *True*
+- Line 346 : choose if you want to train a model from scratch of load a pre-trained one : `gen = GenVanillaNN(targetVideoSke, loadFromFile=False)`
+- Line 328 : choose your number of epochs : `n_epoch = 200`
