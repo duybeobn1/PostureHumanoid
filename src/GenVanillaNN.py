@@ -241,7 +241,7 @@ class GenVanillaNN():
         Fonc generator(Skeleton)->Image
     """
     def __init__(self, videoSke, loadFromFile=False, optSkeOrImage=1):
-        image_size = 64
+        image_size = 256
         if optSkeOrImage==1:        # skeleton_dim26 to image
             self.netG = GenNNSke26ToImage()
             src_transform = transforms.Compose([ SkeToVectorTransform(ske_reduced=True)])

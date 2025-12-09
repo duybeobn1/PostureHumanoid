@@ -27,33 +27,42 @@ class Discriminator(nn.Module):
     def __init__(self, ngpu=0):
         super(Discriminator, self).__init__()
         self.ngpu = ngpu
-
-        # Input : (Batch_size, 3, 64, 64)
+        
+        # CNN Architecture
         self.model = nn.Sequential(
-            nn.Conv2d(3, 64, 4, 2, 1, bias = False), 
+            # Input: 3 x 256 x 256
+            nn.Conv2d(3, 64, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
 
-            nn.Conv2d(64, 128, 4, 2, 1, bias = False),
-            nn.InstanceNorm2d(128, affine=True), #WGAN fits with InstanceNorm rather than BatchNorm
+            nn.Conv2d(64, 128, 4, 2, 1, bias=False),
+            nn.InstanceNorm2d(128, affine=True),
             nn.LeakyReLU(0.2, inplace=True),
 
-            nn.Conv2d(128, 256, 4, 2, 1, bias = False),
+            nn.Conv2d(128, 256, 4, 2, 1, bias=False),
             nn.InstanceNorm2d(256, affine=True),
             nn.LeakyReLU(0.2, inplace=True),
 
-            nn.Conv2d(256, 512, 4, 2, 1, bias = False),
+            nn.Conv2d(256, 512, 4, 2, 1, bias=False),
             nn.InstanceNorm2d(512, affine=True),
             nn.LeakyReLU(0.2, inplace=True),
-
-            # Output layer : Conv -> 1 chanel (Score)
-            # Input : 512 x 4 x 4 -> Output : 1 x 1 x 1
-            nn.Conv2d(512, 1, 4, 1, 0, bias = False),
-            # Dont use Sigmoid with WGAN (Critic) , output is Score, not probability [0,1]
+            
+            # Output layer: Conv -> 1 channel
+            # With : 64x64 -> output 1x1
+            # With : 256x256 -> output 13x13 
+            nn.Conv2d(512, 1, 4, 1, 0, bias=False)
         )
 
-
     def forward(self, input):
-        return self.model(input).view(-1, 1).squeeze(1) # Output : (Batch_size)
+        # Run input through the CNN
+        output = self.model(input) 
+        
+        # [Important] Adaptive Pooling:
+        # Regardless of whether output is (Batch, 1, 13, 13) or any other size,
+        # This command will force it to (Batch, 1, 1, 1) -> That is, a single score.
+        output = F.adaptive_avg_pool2d(output, (1, 1))
+        
+        # Flatten to vector (Batch_size,) to match the target of Gradient Penalty
+        return output.view(-1)
     
 
 
@@ -63,7 +72,7 @@ class GenGAN():
        Fonc generator(Skeleton)->Image
     """
     def __init__(self, videoSke, loadFromFile=False):
-        self.image_size = 64 
+        self.image_size = 256 
         
         # [Change 1]: Using Generator input is Image (U-Net)
         # instead of GenNNSke26ToImage (vector input)
@@ -141,8 +150,17 @@ class GenGAN():
             return gradient_penalty
 
     def train(self, n_epochs=20):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"GenGAN: Training on {device}")
+        # [Update for Mac M4]
+        # Check priority: MPS (Apple Silicon) -> CUDA (Nvidia) -> CPU
+        if torch.backends.mps.is_available():
+            device = torch.device("mps")
+            print("GenGAN: Using Apple M4 GPU (MPS acceleration)! Speed will be very fast.")
+        elif torch.cuda.is_available():
+            device = torch.device("cuda")
+            print("GenGAN: Using NVIDIA CUDA GPU.")
+        else:
+            device = torch.device("cpu")
+            print("GenGAN: Warning! Training on CPU. This will be slow.")
         
         self.netG.to(device)
         self.netD.to(device)
@@ -153,12 +171,13 @@ class GenGAN():
         
         # Hyperparameters
         lambda_gp = 10      # Gradient penalty weight
-        lambda_l1 = 100     # Content loss weight (Important for image keeps the posture correctly)
+        lambda_l1 = 50      # Content loss weight
 
         print("GenGAN: Starting Training Loop...")
         
         for epoch in range(n_epochs):
             for i, (ske_input, real_img) in enumerate(self.dataloader):
+                # Data migration (MPS/GPU/CPU)
                 ske_input = ske_input.to(device)
                 real_img = real_img.to(device)
                 
@@ -167,18 +186,11 @@ class GenGAN():
                 # ---------------------
                 optimizerD.zero_grad()
                 
-                # Real images
                 real_validity = self.netD(real_img)
-                
-                # Fake images
                 fake_img = self.netG(ske_input)
-                fake_validity = self.netD(fake_img.detach()) # Detach for not calculate gradient for G this moment
+                fake_validity = self.netD(fake_img.detach())
                 
-                # Gradient Penalty
                 gradient_penalty = self.compute_gradient_penalty(real_img, fake_img.detach(), device)
-                
-                # Loss D (Wasserstein distance)
-                # D wants to maximize (Real - Fake) => minimize (Fake - Real)
                 d_loss = -torch.mean(real_validity) + torch.mean(fake_validity) + lambda_gp * gradient_penalty
                 
                 d_loss.backward()
@@ -187,30 +199,24 @@ class GenGAN():
                 # -----------------
                 #  Train Generator
                 # -----------------
-                # Train G each 5 steps of D (standard WGAN-GP), or every step if you want it simpler
                 if i % 5 == 0:
                     optimizerG.zero_grad()
-                    
-                    # Generate again (needs graph gradient)
                     fake_img_g = self.netG(ske_input)
                     fake_validity_g = self.netD(fake_img_g)
                     
-                    # Loss G
-                    # 1. Adversarial loss: G wants D to think the image is real (maximize output D => minimize -output D)
                     g_adv_loss = -torch.mean(fake_validity_g)
-                    # 2. L1 Loss: The generated image must be similar to the real image (pixel-wise)
                     g_l1_loss = F.l1_loss(fake_img_g, real_img)
-                    
                     g_loss = g_adv_loss + lambda_l1 * g_l1_loss
                     
                     g_loss.backward()
                     optimizerG.step()
-            
-            # Print logs
-            print(f"[Epoch {epoch}/{n_epochs}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item() if 'g_loss' in locals() else 0:.4f}]")
-            
-            # Save checkpoint occasionally
-            if epoch % 10 == 0 or epoch == n_epochs - 1:
+
+                # [LOGGING] Immediate progress logging
+                if i == 0 or i % 10 == 0:
+                    print(f"[Epoch {epoch}/{n_epochs}] [Batch {i}/{len(self.dataloader)}] [D loss: {d_loss.item():.4f}] [G loss: {g_loss.item() if 'g_loss' in locals() else 0:.4f}]")
+
+            # Save checkpoint
+            if epoch % 5 == 0 or epoch == n_epochs - 1:
                 directory = os.path.dirname(self.filename)
                 os.makedirs(directory, exist_ok=True)
                 torch.save({
@@ -262,11 +268,11 @@ if __name__ == '__main__':
     if TRAIN_MODE:
         print("Starting training GAN")
         # loadFromFile=False for resetting the model and training from scratch
-        gen = GenGAN(targetVideoSke, loadFromFile=False)
+        gen = GenGAN(targetVideoSke, loadFromFile=True)
 
         # Train for 200 epochs to achieve decent results
         # Train for 500-1000 epochs to achieve better results
-        gen.train(n_epochs=2000) 
+        gen.train(n_epochs=100) 
     else:
         print("Loading pre-trained model...")
         gen = GenGAN(targetVideoSke, loadFromFile=True)

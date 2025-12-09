@@ -70,7 +70,8 @@ class VideoSkeleton:
        self.ske : nparray<Skeleton> => ske[i] the skeleton
        Proc draw() : display all the frame image+skeleton
     """
-    def __init__(self, filename, forceCompute=False, modFrame=10, newVideoWidth=256, cropRatio=1.0, isCrop=True):
+    # [UPGRADE] Changed default newVideoWidth from 256 to 512 for better resolution
+    def __init__(self, filename, forceCompute=False, modFrame=10, newVideoWidth=512, cropRatio=1.0, isCrop=True):
         """
         filename : str => video filename
         forceCompute : boolean => recompute the skeleton if True
@@ -216,6 +217,7 @@ class VideoSkeleton:
         """ draw skeleton on image """
         print(os.getcwd())
         for i in range(self.skeCount()):
+            # [UPGRADE] Draw on the cropped size (which is larger now)
             empty = np.zeros((self.ske_height_crop, self.ske_width_crop, 3), dtype=np.uint8)
             im = self.readImage(i)
             self.ske[i].draw(empty)
@@ -234,9 +236,9 @@ if __name__ == '__main__':
     force = True
     #force = False
     modFRame = 10           # 10=>1440 images, 25=>560 images, 100=>140 images, 500=>280 images
-    modFRame = 100
-    modFRame = 5
-    modFRame = 100
+    # modFRame = 100
+    # modFRame = 5
+    # modFRame = 100
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -245,15 +247,11 @@ if __name__ == '__main__':
             if len(sys.argv) > 3:
                 modFRame = int(sys.argv[3])
     else:
-        filename = "data/taichi1.mp4"
+        filename = "../data/taichi1.mp4"
     print("Current Working Directory: ", os.getcwd())
     print("Filename=", filename)
 
-    s = VideoSkeleton(filename, forceCompute=force, modFrame=modFRame, newVideoWidth=500, cropRatio=1.0, isCrop=False)  # 0.75)
+    # [UPGRADE] Changed newVideoWidth to 512 for higher quality extraction
+    s = VideoSkeleton(filename, forceCompute=force, modFrame=modFRame, newVideoWidth=512, cropRatio=1.0, isCrop=False)
     print(s)
     s.draw()
-
-    # s.draw(image)
-    # cv2.imshow('Image', image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
