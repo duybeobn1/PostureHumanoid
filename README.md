@@ -20,7 +20,8 @@ Similarily, you can select the models you want to execute from *"GenVanillaNN.py
 The available models are also stored in *src/data/Dance*.
 
 Our pretrained models are : 
-- *DanceGenGAN.pth* : our most up-to-date GAN version, with attention mechanism and skip-connections
+- *DanceGenGAN_256_256.pth* : our most up-to-date GAN version, with attention mechanism and skip-connections, the update skeleton version and self.image_size = 256
+- *DanceGenGAN.pth* : our previous GAN version, with attention mechanism and skip-connections only.
 - *DanceGenGAN (without Attention).pth* : 1st version of this GAN model, without attention mechanism
 - *DanceGenVanillaFromSke26.pth* : model compatible with the *"GenVanillaNN.py"* file
 
@@ -69,4 +70,13 @@ Its features include :
   - from layer 3 of encoder => joined with output of layer 1 of encoder by concatenation
   - from layer 1 of encoder => joined with output of layer 3 of encoder by concatenation
 - self-attention layer of 1st decoding layer.
+
+**Image Size & Skeleton architecture**
+Raising the *self.image_size* parmater has shown to improve the model's performances. However, is significantly inscreases the length of each training epoch.
+We chose `self.image_size = 256`for our final version of the model (*DanceGenGAN_256_256.pth*)
+
+We also updated the *VideoSkeleton.py* file :
+- changed the default newVideoWidth from 256 to 512 (both in the init method and the main block).
+- implemented and used the crop_with_padding helper function inside cropAndSke. When a person moves to the very edge of the camera frame, a standard crop would either fail (crash) or distort the image because the required area "doesn't exist." This function adds black pixels (padding) to fill the void, ensuring every extracted image has the exact same dimensions without crashing.
+- updated the creation of the empty canvas to use self.ske_height_crop and self.ske_width_crop. This ensures that when run VideoSkeleton.py to test data, the window displays the full, high-resolution cropped images, allowing to visually verify that the data is indeed sharp before training. ( U-net GAN)
 
