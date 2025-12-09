@@ -24,7 +24,7 @@ Our pretrained models are :
 - *DanceGenGAN (without Attention).pth* : 1st version of this GAN model, without attention mechanism
 - *DanceGenVanillaFromSke26.pth* : model compatible with the *"GenVanillaNN.py"* file
 
-## 2 - Code execution : 
+### 2 - Code execution : 
 The file to execute is **DanceDemo.py**. 
 In its `__main__` function (Line 67), select the following parameters :
 
