@@ -50,3 +50,6 @@ Similarly :
 - Line 329 : switch the value of *train* to *True*
 - Line 346 : choose if you want to train a model from scratch of load a pre-trained one : `gen = GenVanillaNN(targetVideoSke, loadFromFile=False)`
 - Line 328 : choose your number of epochs : `n_epoch = 200`
+
+## C - What we implemented 
+Our efforts were focussed on the *GenGAN.py* file. We chose
