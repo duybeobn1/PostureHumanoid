@@ -49,11 +49,11 @@ class DanceDemo:
                     ske.draw(image_src)
                     image_tgt = self.generator.generate(ske)            # GENERATOR !!!
                     image_tgt = image_tgt*255
-                    image_tgt = cv2.resize(image_tgt, (1024, 1024))
+                    image_tgt = cv2.resize(image_tgt, (256, 256))
                 else:
                     image_tgt = image_err
                 image_combined = combineTwoImages(image_src, image_tgt)
-                image_combined = cv2.resize(image_combined, (512, 256))
+                image_combined = cv2.resize(image_combined, (1024, 512))
                 cv2.imshow('Image', image_combined)
                 key = cv2.waitKey(1)
                 if key & 0xFF == ord('q'):
