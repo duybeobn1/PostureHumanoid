@@ -272,7 +272,8 @@ if __name__ == '__main__':
 
         # Train for 200 epochs to achieve decent results
         # Train for 500-1000 epochs to achieve better results
-        gen.train(n_epochs=495) 
+        gen.train(n_epochs=500) 
+        # lastest : 165 (11/12) + 130 + 70 
     else:
         print("Loading pre-trained model...")
         gen = GenGAN(targetVideoSke, loadFromFile=True)
