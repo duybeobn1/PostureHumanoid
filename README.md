@@ -8,7 +8,7 @@ From a video of a source person and another of a target person, the objective is
 
 ## 00 - Our demo
 
-You can download our Demo video : file *GAN_Demo_Video.mp4*.
+You can download our Demo video : file *[GAN_Demo_Video.mp4](https://github.com/duybeobn1/PostureHumanoid/blob/main/GAN_Demo_Video.mp4)*.
 
 ## A - How to run the code using the trained network
 
