@@ -75,7 +75,7 @@ class GenGAN():
         self.real_label = 1.
         self.fake_label = 0.
         
-        self.filename = 'data/Dance/DanceGenGAN.pth'
+        self.filename = 'data/Dance/DanceGenGAN_64_64_2000epochs.pth'
 
         # Transform cho TARGET (Real image from video) -> [-1, 1]
         tgt_transform = transforms.Compose([
