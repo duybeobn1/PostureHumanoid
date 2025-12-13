@@ -6,6 +6,10 @@ From a video of a source person and another of a target person, the objective is
 
 [See the course main page with the description of this tutorial/TP](http://alexandre.meyer.pages.univ-lyon1.fr/m2-apprentissage-profond-image/am/tp_dance/)
 
+## 00 - Our demo
+
+
+
 ## A - How to run the code using the trained network
 
 The first step is to clone this repository in order to create a copy you can modify at your will.
@@ -25,7 +29,7 @@ Our pretrained models are:
 - **DanceGenGAN10.pth**: *Early Checkpoint* (10 epochs). Uses Smooth U-Net. Shows the early stages of training stability.
 - **DanceGenGAN256-256-1.pth**: *Comparison Version* (150 epochs). Trained on High-Res data but **without** Smooth U-Net (uses standard Deconvolution). Useful to demonstrate checkerboard artifacts compared to the smooth version.
 - **DanceGenGAN50.pth**: *Comparison Version* (50 epochs). Trained on High-Res data **without** Smooth U-Net.
-- **DanceGenGAN_64_64_2000epochs.pth**: *Baseline Version* (2000 epochs). Old architecture trained on Low-Res (64x64) data.
+- **DanceGenGAN_64_64_2000epochs.pth**: *Baseline Version* (2000 epochs). Old architecture trained on Low-Res (64x64) data. No more executable on the last version of our code, you can use it by pulling the "UPDATE : 2000 epoches training" commit (29/11/2025).
 - **DanceGenVanillaFromSke26.pth**: Model compatible with the *"GenVanillaNN.py"* file (Vector input).
 
 ### 2 - Code execution
