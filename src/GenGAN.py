@@ -115,7 +115,8 @@ class GenGAN():
         # [Change 5]: Update model loading method (Load both G and D)
         if loadFromFile and os.path.isfile(self.filename):
             print("GenGAN: Loading model from", self.filename)
-            checkpoint = torch.load(self.filename)
+            checkpoint = torch.load(self.filename, map_location=torch.device('cpu'))
+            torch.save(checkpoint, self.filename)
             # Check if the saved file is a dictionary (new method) or model object (old method)
             if isinstance(checkpoint, dict) and 'netG' in checkpoint: # Pas "and 'netD'" ici ?
                 self.netG.load_state_dict(checkpoint['netG'])
