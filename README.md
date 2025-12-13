@@ -9,7 +9,6 @@ From a video of a source person and another of a target person, the objective is
 ## 00 - Our demo
 
 
-
 ## A - How to run the code using the trained network
 
 The first step is to clone this repository in order to create a copy you can modify at your will.
