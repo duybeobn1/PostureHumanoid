@@ -25,7 +25,7 @@ The available models are also stored in *src/data/Dance*.
 
 Our pretrained models are:
 - **DanceGenGAN.pth**: *Final Version* (350 epochs). Uses **Smooth U-Net** (Upsampling + Conv) + Attention on High-Res (256x256) data. Best quality with reduced noise.
-- **DanceGenGAN150final.pth**: *Intermediate Version* (150 epochs). Uses Smooth U-Net. Good quality but less refined than the final version.
+- **DanceGenGAN150intermediate.pth**: *Intermediate Version* (150 epochs). Uses Smooth U-Net. Good quality but less refined than the final version.
 - **DanceGenGAN10.pth**: *Early Checkpoint* (10 epochs). Uses Smooth U-Net. Shows the early stages of training stability.
 - **DanceGenGAN256-256-1.pth**: *Comparison Version* (150 epochs). Trained on High-Res data but **without** Smooth U-Net (uses standard Deconvolution). Useful to demonstrate checkerboard artifacts compared to the smooth version.
 - **DanceGenGAN50.pth**: *Comparison Version* (50 epochs). Trained on High-Res data **without** Smooth U-Net.
