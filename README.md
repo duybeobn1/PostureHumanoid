@@ -29,7 +29,7 @@ Our pretrained models are:
 - **DanceGenGAN10.pth**: *Early Checkpoint* (10 epochs). Uses Smooth U-Net. Shows the early stages of training stability.
 - **DanceGenGAN256-256-1.pth**: *Comparison Version* (150 epochs). Trained on High-Res data but **without** Smooth U-Net (uses standard Deconvolution). Useful to demonstrate checkerboard artifacts compared to the smooth version.
 - **DanceGenGAN50.pth**: *Comparison Version* (50 epochs). Trained on High-Res data **without** Smooth U-Net.
-- **DanceGenGAN_64_64_2000epochs.pth**: *Baseline Version* (2000 epochs). Old architecture trained on Low-Res (64x64) data. No more executable on the last version of our code, you can use it by pulling the "UPDATE : 2000 epoches training" commit (29/11/2025).
+- **DanceGenGAN_64_64_2000epochs.pth**: *Baseline Version* (2000 epochs). Old architecture trained on Low-Res (64x64) data. No more executable on the main branch, you can execute it by pulling from the "old64version" branch.
 - **DanceGenVanillaFromSke26.pth**: Model compatible with the *"GenVanillaNN.py"* file (Vector input).
 
 ### 2 - Code execution
