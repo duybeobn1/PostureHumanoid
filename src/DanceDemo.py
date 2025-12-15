@@ -31,7 +31,7 @@ class DanceDemo:
             print("Generator: GenSimpleNN")
             self.generator = GenVanillaNN( self.target, loadFromFile=True, optSkeOrImage=2)
         elif typeOfGen==4:         # GAN
-            print("Generator: GenSimpleNN")
+            print("Generator: GenGAN")
             self.generator = GenGAN( self.target, loadFromFile=True)
         else:
             print("DanceDemo: typeOfGen error!!!")
@@ -47,7 +47,7 @@ class DanceDemo:
                 isSke, image_src, ske = self.target.cropAndSke(image_src, ske)
                 if isSke:
                     ske.draw(image_src)
-                    image_tgt = self.generator.generate(ske)            # GENERATOR !!!
+                    image_tgt = self.generator.generate(ske)            # GENERATOR
                     image_tgt = image_tgt*255
                     image_tgt = cv2.resize(image_tgt, (256, 256))
                 else:
